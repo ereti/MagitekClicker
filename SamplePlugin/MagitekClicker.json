@@ -1,0 +1,10 @@
+{
+  "Author": "ereti",
+  "Name": "Magitek Clicker",
+  "Punchline": "Chat-triggered sound effects. You know why.",
+  "Description": "Trigger arbitrary sound effects to play based on phrases spoken in chat.",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "clicker"
+  ]
+}
