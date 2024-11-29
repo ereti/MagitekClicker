@@ -55,7 +55,7 @@ public sealed class Plugin : IDalamudPlugin
     public void HandleChatMessage(XivChatType type, int timestamp, ref SeString senderE, ref SeString message, ref bool isHandled)
     {
         if (!Configuration.Enabled) return;
-        if (type != XivChatType.Party && type != XivChatType.FreeCompany) return;
+        if (type != XivChatType.Party && type != XivChatType.FreeCompany && type != XivChatType.TellIncoming && type != XivChatType.Say) return;
         if (message == null) return;
 
         foreach(var trigger in Configuration.Triggers)
