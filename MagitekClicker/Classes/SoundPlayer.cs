@@ -8,6 +8,7 @@ using NAudio.Wave.SampleProviders;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
 using Dalamud.Plugin;
+using MagitekClicker.Classes;
 
 public class SoundPlayer : IDisposable
 {
@@ -16,8 +17,6 @@ public class SoundPlayer : IDisposable
     private readonly IWavePlayer wavOut;
     private readonly MixingSampleProvider mixer;
     private readonly VolumeSampleProvider sampleProvider;
-
-    private float volume = 1f;
 
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
 
@@ -32,6 +31,10 @@ public class SoundPlayer : IDisposable
 
         wavOut.Init(sampleProvider);
         wavOut.Play();
+    }
+
+    public void SetVolume(float volume)
+    {
         sampleProvider.Volume = volume;
     }
 

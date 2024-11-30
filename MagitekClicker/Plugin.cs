@@ -8,6 +8,7 @@ using MagitekClicker.Windows;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using MagitekClicker.Classes;
+using System.Collections.Generic;
 
 namespace MagitekClicker;
 
@@ -55,7 +56,7 @@ public sealed class Plugin : IDalamudPlugin
     public void HandleChatMessage(XivChatType type, int timestamp, ref SeString senderE, ref SeString message, ref bool isHandled)
     {
         if (!Configuration.Enabled) return;
-        if (type != XivChatType.Party && type != XivChatType.FreeCompany && type != XivChatType.TellIncoming && type != XivChatType.Say) return;
+        if (!Configuration.AllowedChannels.Contains(type)) return;
         if (message == null) return;
 
         foreach(var trigger in Configuration.Triggers)
@@ -70,6 +71,7 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     if(audio.Name == soundId && audio.Path != "")
                     {
+                        SoundPlayer.Instance.SetVolume(Configuration.Volume);
                         SoundPlayer.Instance.PlaySound(audio.Path);
                         break;
                     }

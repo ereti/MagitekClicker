@@ -20,11 +20,11 @@ public class MainWindow : Window, IDisposable
     // So that the user will see "My Amazing Window" as window title,
     // but for ImGui the ID is "My Amazing Window##With a hidden ID"
     public MainWindow(Plugin plugin)
-        : base("Magitek Clicker##clickermain", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+        : base("Magitek Clicker##clickermain")
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(500, 500),
+            MinimumSize = new Vector2(500, 300),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
         Configuration = plugin.Configuration;
@@ -61,6 +61,21 @@ public class MainWindow : Window, IDisposable
                 Configuration.Save();
             }
 
+            var volume = Configuration.Volume;
+            if(ImGui.SliderFloat("Volume", ref volume, 0f, 1f))
+            {
+                Configuration.Volume = volume;
+                Configuration.Save();
+            }
+
+            ImGui.Separator();
+
+            ImGui.TextWrapped("Planned future features:");
+            ImGui.TextWrapped(" - Support for more audio formats (.ogg, etc)");
+            ImGui.TextWrapped(" - Change which channels are allowed to trigger phrases, including on a per-phrase basis");
+            ImGui.TextWrapped(" - Restrict phrases to specific players or groups of players");
+            ImGui.TextWrapped(" - Assign more than one sound to a phrase and choose one at random");
+
             ImGui.EndTabItem();
         }
     }
@@ -69,6 +84,9 @@ public class MainWindow : Window, IDisposable
     {
         if (ImGui.BeginTabItem("Sounds"))
         {
+            ImGui.TextWrapped("Add the path to sound files on your computer below. The name is the ID used to identify the sound when setting up triggers. Note that only .mp3 and .wav files are currently supported.");
+            ImGui.Separator();
+
             if (ImGui.Button("New Sound"))
             {
                 string name = $"Sound {Configuration.AudioFiles.Count}";
@@ -129,6 +147,9 @@ public class MainWindow : Window, IDisposable
     {
         if (ImGui.BeginTabItem("Triggers"))
         {
+            ImGui.TextWrapped("Add trigger phrases below and the sound they should correspond to - use the name given to the sound in the Sounds tab, not the path to the file.");
+            ImGui.Separator();
+
             if (ImGui.Button("New Trigger"))
             {
                 string name = $"Trigger {Configuration.Triggers.Count}";
