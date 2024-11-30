@@ -1,10 +1,13 @@
 {
-  "Author": "ereti",
-  "Name": "Magitek Clicker",
-  "Punchline": "Chat-triggered sound effects. You know why.",
-  "Description": "Trigger arbitrary sound effects to play based on phrases spoken in chat.",
-  "ApplicableVersion": "any",
-  "Tags": [
-    "clicker"
-  ]
+    "Author": "ereti",
+    "Name": "Magitek Clicker",
+    "Punchline": "Chat-triggered sound effects. You know why.",
+    "Description": "Trigger arbitrary sound effects to play based on phrases spoken in chat.",
+    "ApplicableVersion": "any",
+    "Tags": [
+        "clicker",
+        "sound",
+        "chat"
+    ],
+    "IconUrl": "https://raw.githubusercontent.com/ereti/MagitekClicker/master/images/icon.png"
 }
