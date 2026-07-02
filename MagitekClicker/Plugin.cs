@@ -1,16 +1,17 @@
+using Dalamud.Game.Chat;
 using Dalamud.Game.Command;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using System.IO;
-using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
-using MagitekClicker.Windows;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Interface.Windowing;
+using Dalamud.IoC;
+using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using MagitekClicker.Classes;
-using System.Collections.Generic;
-using Dalamud.Game.Chat;
+using MagitekClicker.Windows;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MagitekClicker;
@@ -65,6 +66,18 @@ public sealed class Plugin : IDalamudPlugin
 
             var allowedChannels = trigger.AllowedChannels.Count > 0 ? trigger.AllowedChannels : Configuration.AllowedChannels;
             if (!allowedChannels.Contains(message.LogKind)) continue;
+
+            var allowedPlayers = trigger.WhitelistedPlayers.Count > 0 ? trigger.WhitelistedPlayers : [];
+            if (allowedPlayers.Count > 0)
+            {
+                var sender = message.Sender;
+                var senderPayload = sender.Payloads.OfType<PlayerPayload>().FirstOrDefault();
+                var senderName = senderPayload?.PlayerName ?? "";
+                var senderWorld = senderPayload?.World.Value.Name.ToString() ?? "";
+
+                if (string.IsNullOrWhiteSpace(senderName) || string.IsNullOrWhiteSpace(senderWorld)) continue;
+                if (!allowedPlayers.Any(x => string.Equals(x.PlayerName, senderName, StringComparison.OrdinalIgnoreCase) && string.Equals(x.PlayerWorld, senderWorld, StringComparison.OrdinalIgnoreCase))) continue;
+            }
 
             if (message.Message.ToString().ToLower().Contains(trigger.TriggerPhrases[0].ToLower()))
             {

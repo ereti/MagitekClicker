@@ -14,6 +14,7 @@ namespace MagitekClicker.Classes
         public bool Enabled { get; set; } = false;
         public List<string> TriggerPhrases { get; set; } = new();
         public List<string> AudioIds { get; set; } = new();
+        public List<WhitelistedPlayer> WhitelistedPlayers { get; set; } = new();
         public HashSet<XivChatType> AllowedChannels { get; set; } = new();
     }
 }
