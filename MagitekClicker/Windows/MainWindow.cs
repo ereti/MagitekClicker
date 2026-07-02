@@ -49,6 +49,7 @@ public class MainWindow : Window, IDisposable
         {
             DrawGeneralTab();
             DrawSoundsTab();
+            DrawPlayersTab();
             DrawTriggersTab();
 
             ImGui.EndTabBar();
@@ -66,18 +67,27 @@ public class MainWindow : Window, IDisposable
                 Configuration.Save();
             }
 
-            var volume = Configuration.Volume;
-            if(ImGui.SliderFloat("Volume", ref volume, 0f, 1f))
+            var useXIVSFXVolume = Configuration.UseXIVSFXVolume;
+            if (ImGui.Checkbox("Use XIV SFX Volume?", ref useXIVSFXVolume))
             {
-                Configuration.Volume = volume;
+                Configuration.UseXIVSFXVolume = useXIVSFXVolume;
                 Configuration.Save();
+            }
+
+            if (!Configuration.UseXIVSFXVolume)
+            {
+                var volume = Configuration.Volume;
+                if (ImGui.SliderFloat("Volume", ref volume, 0f, 1f))
+                {
+                    Configuration.Volume = volume;
+                    Configuration.Save();
+                }
             }
 
             ImGui.Separator();
 
             ImGui.TextWrapped("Planned future features:");
             ImGui.TextWrapped(" - Support for more audio formats (.ogg, etc)");
-            ImGui.TextWrapped(" - Restrict phrases to specific players or groups of players");
 
             ImGui.EndTabItem();
         }
@@ -135,7 +145,101 @@ public class MainWindow : Window, IDisposable
 
                     if (ImGui.Button($"Delete##sound-delete{i}"))
                     {
+                        foreach (var trigger in Configuration.Triggers)
+                        {
+                            if (trigger.AudioIds.Contains(audioFile.Name))
+                            {
+                                trigger.AudioIds.Remove(audioFile.Name);
+                            }
+                        }
+
                         Configuration.AudioFiles.RemoveAt(i);
+                        Configuration.Save();
+                    }
+
+                    ImGui.TableNextRow();
+                    ImGui.TableNextColumn();
+                }
+
+            }
+            ImGui.EndTable();
+
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void DrawPlayersTab()
+    {
+        if (ImGui.BeginTabItem("Players"))
+        {
+            ImGui.TextWrapped("Add specific player aliases for selection.");
+            ImGui.Separator();
+
+            if (ImGui.Button("New Player"))
+            {
+                WhitelistedPlayer audioFile = new WhitelistedPlayer();
+                Configuration.Players.Add(audioFile);
+                Configuration.Save();
+            }
+
+            if (ImGui.BeginTable("##Players", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+            {
+                ImGui.TableSetupColumn("Alias", ImGuiTableColumnFlags.WidthStretch, 2);
+                ImGui.TableSetupColumn("Player Name", ImGuiTableColumnFlags.WidthStretch, 4);
+                ImGui.TableSetupColumn("World", ImGuiTableColumnFlags.WidthStretch, 3);
+                ImGui.TableSetupColumn("Delete", ImGuiTableColumnFlags.WidthStretch, 1);
+                ImGui.TableHeadersRow();
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
+                for (int i = 0; i < Configuration.Players.Count; i++)
+                {
+                    WhitelistedPlayer wPlayer = Configuration.Players[i];
+
+                    string alias = wPlayer.PlayerAlias;
+
+                    ImGui.SetNextItemWidth(-1);
+
+                    if (ImGui.InputTextWithHint($"##player-alias{i}", "", ref alias, 100))
+                    {
+                        wPlayer.PlayerAlias = alias;
+                        Configuration.Save();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.SetNextItemWidth(-1);
+
+                    string pName = wPlayer.PlayerName;
+                    if (ImGui.InputTextWithHint($"##player-name{i}", "", ref pName, 100))
+                    {
+                        wPlayer.PlayerName = pName;
+                        Configuration.Save();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.SetNextItemWidth(-1);
+
+                    string pWorld = wPlayer.PlayerWorld;
+                    if (ImGui.InputTextWithHint($"##player-world{i}", "", ref pWorld, 100))
+                    {
+                        wPlayer.PlayerWorld = pWorld;
+                        Configuration.Save();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.SetNextItemWidth(-1);
+
+                    if (ImGui.Button($"Delete##player-delete{i}"))
+                    {
+                        foreach (var trigger in Configuration.Triggers)
+                        {
+                            if (trigger.WhitelistedPlayers.Any(x => string.Equals(x.PlayerName, wPlayer.PlayerName, StringComparison.OrdinalIgnoreCase) && string.Equals(x.PlayerWorld, wPlayer.PlayerWorld, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                trigger.WhitelistedPlayers.RemoveAll(x => string.Equals(x.PlayerName, wPlayer.PlayerName, StringComparison.OrdinalIgnoreCase) && string.Equals(x.PlayerWorld, wPlayer.PlayerWorld, StringComparison.OrdinalIgnoreCase));
+                            }
+                        }
+
+                        Configuration.Players.RemoveAt(i);
                         Configuration.Save();
                     }
 
@@ -156,6 +260,7 @@ public class MainWindow : Window, IDisposable
         {
             ImGui.TextWrapped("Add trigger phrases below and the sound they should correspond to - use the name given to the sound in the Sounds tab, not the path to the file.");
             ImGui.TextWrapped("Optionally, select channel(s) the trigger can be used in. Select none to use the global filter.");
+            ImGui.TextWrapped("Also optionally, select player(s) the trigger can be used by. Select none to allow anyone.");
             ImGui.Separator();
 
             if (ImGui.Button("New Trigger"))
@@ -165,12 +270,13 @@ public class MainWindow : Window, IDisposable
                 Configuration.Triggers.Add(trigger);
                 Configuration.Save();
             }
-            if (ImGui.BeginTable("##Triggers", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
+            if (ImGui.BeginTable("##Triggers", 7, ImGuiTableFlags.Borders | ImGuiTableFlags.Resizable))
             {
                 ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 2);
                 ImGui.TableSetupColumn("Phrase", ImGuiTableColumnFlags.WidthStretch, 3);
                 ImGui.TableSetupColumn("Sound", ImGuiTableColumnFlags.WidthStretch, 4);
                 ImGui.TableSetupColumn("Channels", ImGuiTableColumnFlags.WidthStretch, 4);
+                ImGui.TableSetupColumn("Players", ImGuiTableColumnFlags.WidthStretch, 4);
                 ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthStretch, 1);
                 ImGui.TableSetupColumn("Delete", ImGuiTableColumnFlags.WidthStretch, 1);
                 ImGui.TableHeadersRow();
@@ -215,7 +321,7 @@ public class MainWindow : Window, IDisposable
                         ImGui.SameLine();
                         ImGui.InputText($"##trigger-soundSearch{i}", ref SoundSearch, 100);
 
-                        var filteredSounds = Configuration.AudioFiles.OrderBy(audioFile => audioFile.Name).Where(audioFile => audioFile.Name.ToString().Contains(SoundSearch, StringComparison.OrdinalIgnoreCase));
+                        var filteredSounds = Configuration.AudioFiles.OrderBy(audioFile => audioFile.Name).Where(audioFile => audioFile.Name.ToString().Contains(SoundSearch, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(audioFile.Path));
                         foreach (var audioFile in filteredSounds)
                         {
                             if (ImGui.Selectable(audioFile.Name.ToString(), trigger.AudioIds.Contains(audioFile.Name), ImGuiSelectableFlags.DontClosePopups))
@@ -249,6 +355,32 @@ public class MainWindow : Window, IDisposable
                             {
                                 if (trigger.AllowedChannels.Contains(channelType)) trigger.AllowedChannels.Remove(channelType);
                                 else trigger.AllowedChannels.Add(channelType);
+                                Configuration.Save();
+                            }
+                        }
+
+                        ImGui.EndCombo();
+                    }
+
+                    ImGui.TableNextColumn();
+                    ImGui.SetNextItemWidth(-1);
+
+                    string whitelistedPlayersPreview =
+                        trigger.WhitelistedPlayers.Count > 1 ? $"{trigger.WhitelistedPlayers.First().PlayerDisplay} (+{trigger.WhitelistedPlayers.Count - 1} more)" :
+                        trigger.WhitelistedPlayers.Count == 1 ? trigger.WhitelistedPlayers.First().PlayerDisplay : "";
+
+                    if (ImGui.BeginCombo($"##trigger-players{i}", whitelistedPlayersPreview))
+                    {
+                        ImGui.Text("Search");
+                        ImGui.SameLine();
+                        ImGui.InputText($"##trigger-playerSearch{i}", ref ChannelSearch, 100);
+
+                        foreach (var configPlayer in Configuration.Players)
+                        {
+                            if (ImGui.Selectable(configPlayer.PlayerDisplay, trigger.WhitelistedPlayers.Contains(configPlayer), ImGuiSelectableFlags.DontClosePopups))
+                            {
+                                if (trigger.WhitelistedPlayers.Contains(configPlayer)) trigger.WhitelistedPlayers.Remove(configPlayer);
+                                else trigger.WhitelistedPlayers.Add(configPlayer);
                                 Configuration.Save();
                             }
                         }
